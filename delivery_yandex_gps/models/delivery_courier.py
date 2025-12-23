@@ -1,4 +1,5 @@
 from odoo import api, fields, models
+from datetime import timedelta
 
 
 class DeliveryCourier(models.Model):
