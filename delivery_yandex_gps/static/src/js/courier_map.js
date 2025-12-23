@@ -4,6 +4,12 @@ import { registry } from "@web/core/registry";
 import { Component, onMounted, onWillUnmount, useRef } from "@odoo/owl";
 import { rpc } from "@web/core/network/rpc";
 
+// Option 1 (preset):
+// Car icon:
+const ICON_PRESET = "islands#blueAutoIcon"; // :contentReference[oaicite:2]{index=2}
+// If you prefer a delivery icon, use this instead:
+// const ICON_PRESET = "islands#blueDeliveryIcon"; // :contentReference[oaicite:3]{index=3}
+
 class CourierMap extends Component {
     setup() {
         this.mapEl = useRef("map");
@@ -31,12 +37,10 @@ class CourierMap extends Component {
     }
 
     async _waitForContainer(maxFrames = 600) {
-        // Yandex: container can't have zero size. :contentReference[oaicite:3]{index=3}
         for (let i = 0; i < maxFrames; i++) {
             const el = this.mapEl.el;
 
             if (el) {
-                // fallback CSS in case layout hasn't applied yet
                 if (el.offsetHeight === 0) {
                     el.style.width = "100%";
                     el.style.height = el.style.height || "75vh";
@@ -49,7 +53,7 @@ class CourierMap extends Component {
             }
             await new Promise((r) => requestAnimationFrame(r));
         }
-        return null; // don't throw; we'll retry
+        return null;
     }
 
     async _start() {
@@ -60,7 +64,6 @@ class CourierMap extends Component {
 
             const el = await this._waitForContainer();
             if (!el) {
-                // Odoo SPA may mount before the view is visible/sized; retry a few times.
                 this._retryCount += 1;
                 if (this._retryCount <= 5) {
                     this._retryTimer = setTimeout(() => this._start(), 500);
@@ -75,7 +78,6 @@ class CourierMap extends Component {
                 { autoFitToViewport: "always" }
             );
 
-            // Yandex recommends fitToViewport when container size/layout changes. :contentReference[oaicite:4]{index=4}
             this._map.container.fitToViewport();
 
             this._onResize = () => {
@@ -92,7 +94,6 @@ class CourierMap extends Component {
             await this._refreshCouriers();
             this._timer = setInterval(() => this._refreshCouriers(), 2000);
         } catch (e) {
-            // final fail: surface the error in console
             console.error(e);
             throw e;
         }
@@ -111,6 +112,7 @@ class CourierMap extends Component {
             }
         }
 
+        // Remove markers for couriers that are no longer active
         for (const [id, placemark] of this._markers.entries()) {
             if (!activeIds.has(id)) {
                 this._map.geoObjects.remove(placemark);
@@ -128,12 +130,20 @@ class CourierMap extends Component {
             const pm = this._markers.get(id);
             pm.geometry.setCoordinates([lat, lon]);
             pm.properties.set("balloonContent", label);
+            pm.properties.set("hintContent", name);
             pm.properties.set("iconCaption", name);
         } else {
+            // HERE is the only change for Option 1: preset -> car/delivery icon
             const pm = new window.ymaps.Placemark(
                 [lat, lon],
-                { balloonContent: label, iconCaption: name },
-                { preset: "islands#blueDotIconWithCaption" }
+                {
+                    balloonContent: label,
+                    hintContent: name,
+                    iconCaption: name,
+                },
+                {
+                    preset: ICON_PRESET, // :contentReference[oaicite:4]{index=4}
+                }
             );
             this._map.geoObjects.add(pm);
             this._markers.set(id, pm);
