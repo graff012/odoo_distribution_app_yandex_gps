@@ -16,6 +16,7 @@
         "security/security.xml",
         "security/ir.model.access.csv",
         "views/menus.xml",
+        "views/delivery_courier_views.xml"
     ],
     "assets": {
         "web.assets_backend": [

@@ -19,8 +19,23 @@ class DeliveryCourier(models.Model):
 
     is_online = fields.Boolean(compute="_compute_is_online", store=False)
 
-    @api.depends("last_update")
-    def _compute_is_online(self):
-        now = fields.Datetime.now()
+    tracking_status = fields.Selection(
+        selection=[
+            ("tracking", "Tracking"),
+            ("stopped", "Stopped"),
+            ("stale", "Stale (no updates)"),
+        ],
+        compute="_compute_tracking_status",
+        store=False,
+    )
+
+    @api.depends("is_tracking", "last_update")
+    def _compute_tracking_status(self):
+        cutoff = fields.Datetime.now() - timedelta(minutes=3)
         for r in self:
-            r.is_online = bool(r.last_update and (now - r.last_update).total_seconds() <= 120)
+            if not r.is_tracking:
+                r.tracking_status = "stopped"
+            elif r.last_update and r.last_update < cutoff:
+                r.tracking_status = "stale"
+            else:
+                r.tracking_status = "tracking"
