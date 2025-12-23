@@ -11,6 +11,8 @@ class CourierMap extends Component {
         this._markers = new Map();
         this._timer = null;
         this._onResize = null;
+        this._retryCount = 0;
+        this._retryTimer = null;
 
         onMounted(() => this._start());
         onWillUnmount(() => this._stop());
@@ -28,45 +30,72 @@ class CourierMap extends Component {
         });
     }
 
-    async _waitForContainer(maxFrames = 120) {
+    async _waitForContainer(maxFrames = 600) {
+        // Yandex: container can't have zero size. :contentReference[oaicite:3]{index=3}
         for (let i = 0; i < maxFrames; i++) {
             const el = this.mapEl.el;
-            if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
-                return el;
+
+            if (el) {
+                // fallback CSS in case layout hasn't applied yet
+                if (el.offsetHeight === 0) {
+                    el.style.width = "100%";
+                    el.style.height = el.style.height || "75vh";
+                    el.style.minHeight = el.style.minHeight || "450px";
+                }
+
+                if (el.offsetWidth > 0 && el.offsetHeight > 0) {
+                    return el;
+                }
             }
             await new Promise((r) => requestAnimationFrame(r));
         }
-        throw new Error("Map container is not visible or has zero size.");
+        return null; // don't throw; we'll retry
     }
 
     async _start() {
-        const apikey = await rpc("/delivery_yandex_gps/yandex_key", {});
-        await this._loadYandex(apikey);
-        await new Promise((resolve) => window.ymaps.ready(resolve));
+        try {
+            const apikey = await rpc("/delivery_yandex_gps/yandex_key", {});
+            await this._loadYandex(apikey);
+            await new Promise((resolve) => window.ymaps.ready(resolve));
 
-        const el = await this._waitForContainer();
-
-        this._map = new window.ymaps.Map(
-            el,
-            { center: [41.3111, 69.2797], zoom: 11 },
-            { autoFitToViewport: "always" }
-        );
-
-        this._map.container.fitToViewport();
-
-        this._onResize = () => {
-            if (this._map) {
-                try {
-                    this._map.container.fitToViewport();
-                } catch {
-                    // ignore
+            const el = await this._waitForContainer();
+            if (!el) {
+                // Odoo SPA may mount before the view is visible/sized; retry a few times.
+                this._retryCount += 1;
+                if (this._retryCount <= 5) {
+                    this._retryTimer = setTimeout(() => this._start(), 500);
+                    return;
                 }
+                throw new Error("Map container is not visible or has zero size.");
             }
-        };
-        window.addEventListener("resize", this._onResize);
 
-        await this._refreshCouriers();
-        this._timer = setInterval(() => this._refreshCouriers(), 2000);
+            this._map = new window.ymaps.Map(
+                el,
+                { center: [41.3111, 69.2797], zoom: 11 },
+                { autoFitToViewport: "always" }
+            );
+
+            // Yandex recommends fitToViewport when container size/layout changes. :contentReference[oaicite:4]{index=4}
+            this._map.container.fitToViewport();
+
+            this._onResize = () => {
+                if (this._map) {
+                    try {
+                        this._map.container.fitToViewport();
+                    } catch {
+                        // ignore
+                    }
+                }
+            };
+            window.addEventListener("resize", this._onResize);
+
+            await this._refreshCouriers();
+            this._timer = setInterval(() => this._refreshCouriers(), 2000);
+        } catch (e) {
+            // final fail: surface the error in console
+            console.error(e);
+            throw e;
+        }
     }
 
     async _refreshCouriers() {
@@ -82,10 +111,9 @@ class CourierMap extends Component {
             }
         }
 
-        // Remove markers for couriers no longer active
         for (const [id, placemark] of this._markers.entries()) {
             if (!activeIds.has(id)) {
-                this._map.geoObjects.remove(placemark); // remove from map :contentReference[oaicite:4]{index=4}
+                this._map.geoObjects.remove(placemark);
                 this._markers.delete(id);
             }
         }
@@ -116,6 +144,11 @@ class CourierMap extends Component {
         if (this._timer) {
             clearInterval(this._timer);
             this._timer = null;
+        }
+
+        if (this._retryTimer) {
+            clearTimeout(this._retryTimer);
+            this._retryTimer = null;
         }
 
         if (this._onResize) {
