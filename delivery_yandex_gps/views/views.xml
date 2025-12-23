@@ -1,0 +1,60 @@
+<odoo>
+  <data>
+    <!-- explicit list view definition -->
+<!--
+    <record model="ir.ui.view" id="delivery_yandex_gps.list">
+      <field name="name">delivery_yandex_gps list</field>
+      <field name="model">delivery_yandex_gps.delivery_yandex_gps</field>
+      <field name="arch" type="xml">
+        <list>
+          <field name="name"/>
+          <field name="value"/>
+          <field name="value2"/>
+        </list>
+      </field>
+    </record>
+-->
+
+    <!-- actions opening views on models -->
+<!--
+    <record model="ir.actions.act_window" id="delivery_yandex_gps.action_window">
+      <field name="name">delivery_yandex_gps window</field>
+      <field name="res_model">delivery_yandex_gps.delivery_yandex_gps</field>
+      <field name="view_mode">list,form</field>
+    </record>
+-->
+
+    <!-- server action to the one above -->
+<!--
+    <record model="ir.actions.server" id="delivery_yandex_gps.action_server">
+      <field name="name">delivery_yandex_gps server</field>
+      <field name="model_id" ref="model_delivery_yandex_gps_delivery_yandex_gps"/>
+      <field name="state">code</field>
+      <field name="code">
+        action = {
+          "type": "ir.actions.act_window",
+          "view_mode": "list,form",
+          "res_model": model._name,
+        }
+      </field>
+    </record>
+-->
+
+    <!-- Top menu item -->
+<!--
+    <menuitem name="delivery_yandex_gps" id="delivery_yandex_gps.menu_root"/>
+-->
+    <!-- menu categories -->
+<!--
+    <menuitem name="Menu 1" id="delivery_yandex_gps.menu_1" parent="delivery_yandex_gps.menu_root"/>
+    <menuitem name="Menu 2" id="delivery_yandex_gps.menu_2" parent="delivery_yandex_gps.menu_root"/>
+-->
+    <!-- actions -->
+<!--
+    <menuitem name="List" id="delivery_yandex_gps.menu_1_list" parent="delivery_yandex_gps.menu_1"
+              action="delivery_yandex_gps.action_window"/>
+    <menuitem name="Server to list" id="delivery_yandex_gps" parent="delivery_yandex_gps.menu_2"
+              action="delivery_yandex_gps.action_server"/>
+-->
+  </data>
+</odoo>

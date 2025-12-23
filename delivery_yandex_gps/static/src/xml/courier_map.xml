@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+  <t t-name="delivery_yandex_gps.CourierMap">
+    <div class="o_form_view">
+      <div class="p-2">
+        <h2>Couriers live map</h2>
+      </div>
+      <div t-ref="map" style="width: 100%; height: calc(100vh - 140px);"></div>
+    </div>
+  </t>
+</templates>

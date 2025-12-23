@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+  <t t-name="delivery_yandex_gps.CourierTracker">
+    <div class="o_form_view p-3">
+      <h2>Courier GPS</h2>
+
+      <div class="mb-2">
+        <button t-if="!state.running" class="btn btn-primary" t-on-click="start">Start tracking</button>
+        <button t-if="state.running" class="btn btn-secondary" t-on-click="stop">Stop</button>
+      </div>
+
+      <div t-if="state.last" class="alert alert-info">Last: <t t-esc="state.last"/></div>
+      <div t-if="state.error" class="alert alert-danger"><t t-esc="state.error"/></div>
+
+      <!-- <div class="text-muted"> -->
+      <!--   Note: many browsers require HTTPS to allow GPS. :contentReference[oaicite:10]{index=10} -->
+      <!-- </div> -->
+    </div>
+  </t>
+</templates>

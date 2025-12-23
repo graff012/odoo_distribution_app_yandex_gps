@@ -1,0 +1,14 @@
+<odoo>
+  <template id="assets_backend" inherit_id="web.assets_backend">
+    <xpath expr="." position="inside">
+      <script type="module" src="/delivery_yandex_gps/static/src/js/courier_tracker.js"/>
+      <script type="module" src="/delivery_yandex_gps/static/src/js/courier_map.js"/>
+      <template id="qweb_templates" xml:space="preserve">
+        <t t-call="delivery_yandex_gps.CourierTracker"/>
+        <t t-call="delivery_yandex_gps.CourierMap"/>
+      </template>
+      <link rel="import" href="/delivery_yandex_gps/static/src/xml/courier_tracker.xml"/>
+      <link rel="import" href="/delivery_yandex_gps/static/src/xml/courier_map.xml"/>
+    </xpath>
+  </template>
+</odoo>

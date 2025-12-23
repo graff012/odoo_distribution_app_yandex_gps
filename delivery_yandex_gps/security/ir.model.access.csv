@@ -1,0 +1,3 @@
+id,name,model_id/id,group_id/id,perm_read,perm_write,perm_create,perm_unlink
+access_delivery_courier_courier,delivery.courier courier,model_delivery_courier,delivery_yandex_gps.group_delivery_gps_courier,1,1,1,0
+access_delivery_courier_manager,delivery.courier manager,model_delivery_courier,delivery_yandex_gps.group_delivery_gps_manager,1,0,0,0
